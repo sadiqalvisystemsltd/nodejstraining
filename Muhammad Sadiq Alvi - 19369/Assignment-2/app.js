@@ -3,7 +3,7 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-
+const jwt = require("jsonwebtoken");
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
@@ -19,6 +19,29 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use((req, res, next) => {
+  if(req.url == "/update" || req.url == "/delete") {
+    const token =
+      req.body.token || req.query.token || req.headers["x-access-token"];
+      if (!token) {
+        res.status(403).send("A token is required for authentication");
+        return;
+      }
+      try {
+        const tokenKey = process.env.TOKEN_KEY;
+        jwt.verify(token, tokenKey);
+        next();
+      } catch (err) {
+          console.log("Error: ", err);
+          res.status(401).send("Invalid Token");
+          return;
+      }
+  } else {
+    next();
+  }
+  
+});
+
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 
@@ -26,6 +49,8 @@ app.use('/users', usersRouter);
 app.use(function(req, res, next) {
   next(createError(404));
 });
+
+
 
 // error handler
 app.use(function(err, req, res, next) {
