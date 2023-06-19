@@ -6,7 +6,8 @@ var logger = require('morgan');
 const jwt = require("jsonwebtoken");
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
-
+const dotenv = require('dotenv');
+dotenv.config();
 var app = express();
 
 // view engine setup

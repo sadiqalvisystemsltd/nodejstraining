@@ -1,5 +1,4 @@
-const dotenv = require('dotenv');
-dotenv.config();
+
 const ALL_USERS = [];
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
