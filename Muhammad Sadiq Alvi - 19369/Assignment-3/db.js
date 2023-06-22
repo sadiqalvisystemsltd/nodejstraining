@@ -2,12 +2,10 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-const DB_CONNECTION_URI = 'mongodb+srv://msadiqalvivisionet:wQRFbA2iRtSKWrgg@cluster0.zdn9lwe.mongodb.net/';
-
 const connectDB = async () => {
   console.log('Connecting to database');
-  await mongoose.connect(DB_CONNECTION_URI).then((res) => {
-    console.log(`DB Connected to: ${DB_CONNECTION_URI}`, res);
+  await mongoose.connect(process.env.MONGO_DB_URI).then((res) => {
+    console.log(`DB Connected to: ${process.env.MONGO_DB_URI}`, res);
   }).catch((err) => {
     console.log('Unable to connect to Database: ', err);
   });
@@ -55,7 +53,7 @@ const updateUserInDB = async (username, firstName, lastName) => {
     return null;
   }
   const User = mongoose.model('User', UserSchema);
-  const updatedUser = await User.updateOne({
+  const updatedUser = await User.findOneAndUpdate({
     _id: user.id,
     first_name: firstName,
     last_name: lastName,
@@ -64,8 +62,21 @@ const updateUserInDB = async (username, firstName, lastName) => {
   return updatedUser;
 };
 
+const deleteUserFromDB = async (username) => {
+  const User = mongoose.model('User', UserSchema);
+  try {
+    const deletedUser = await User.findOneAndDelete({ username }).lean();
+    console.log('Deleted user: ', deletedUser);
+    return deletedUser;
+  } catch (err) {
+    console.log("Can't delete", err);
+    return false;
+  }
+};
+
 exports.connectDB = connectDB;
 exports.addUser = addUser;
 exports.getUser = getUser;
 exports.getUserByUsername = getUserByUsername;
 exports.updateUserInDB = updateUserInDB;
+exports.deleteUserFromDB = deleteUserFromDB;

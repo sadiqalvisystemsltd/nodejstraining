@@ -1,7 +1,6 @@
 /* eslint linebreak-style: ["error", "windows"] */
-const { ALL_USERS } = require('../auth/authenticate');
 const { getReturnableUserObject } = require('../utils/utils');
-const { updateUserInDB } = require('../db');
+const { updateUserInDB, deleteUserFromDB } = require('../db');
 
 const updateUser = async (req, res) => {
   const user = await updateUserInDB(req.body.username, req.body.firstName, req.body.lastName);
@@ -12,14 +11,12 @@ const updateUser = async (req, res) => {
   }
 };
 
-const deleteUser = (req, res) => {
-  for (let i = 0; i < ALL_USERS.length; i += 1) {
-    if (ALL_USERS[i].username === req.body.username) {
-      res.status(200).send('User deleted successfully!');
-      return;
-    }
+const deleteUser = async (req, res) => {
+  if (await deleteUserFromDB(req.body.username)) {
+    res.status(200).send('User deleted successfully');
+  } else {
+    res.status(404).send('User Not Found');
   }
-  res.status(404).send('User Not Found');
 };
 
 exports.updateUser = updateUser;
