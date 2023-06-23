@@ -26,6 +26,7 @@ router.post('/signup', async (req, res) => {
     req.body.email,
     req.body.firstName,
     req.body.lastName,
+    req.body.isAdmin ? req.body.isAdmin : false,
   );
   if (user === 'User already exists') {
     res.status(400).send('User already exists');

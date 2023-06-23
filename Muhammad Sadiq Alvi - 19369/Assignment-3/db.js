@@ -18,9 +18,11 @@ const UserSchema = new Schema({
   username: String,
   password: String,
   email: String,
+  is_admin: Boolean,
+  token: String,
 });
 
-const addUser = async (username, password, email, firstName, lastName) => {
+const addUser = async (username, password, email, firstName, lastName, isAdmin = false) => {
   const User = mongoose.model('User', UserSchema);
   const newUser = new User({
     first_name: firstName,
@@ -28,8 +30,10 @@ const addUser = async (username, password, email, firstName, lastName) => {
     email,
     password,
     username,
+    is_admin: isAdmin,
   });
   await newUser.save();
+  console.log(`Is Admin from Added User: ${newUser.is_admin}`);
 };
 
 const getUser = async (username, password) => {
@@ -47,18 +51,35 @@ const getUserByUsername = async (username) => {
   return user;
 };
 
+const getUserByToken = async (token) => {
+  const User = mongoose.model('User', UserSchema);
+  const user = await User.findOne({ token }).lean();
+  return user;
+};
+
 const updateUserInDB = async (username, firstName, lastName) => {
   const user = await getUserByUsername(username);
   if (!user) {
     return null;
   }
   const User = mongoose.model('User', UserSchema);
-  const updatedUser = await User.findOneAndUpdate({
-    _id: user.id,
+  await User.findOneAndUpdate({ username }, {
     first_name: firstName,
     last_name: lastName,
   }).lean();
+  const updatedUser = await getUserByUsername(username);
   console.log(`Updated user: ${updatedUser}`);
+  return updatedUser;
+};
+
+const updateUserToken = async (user, token) => {
+  const User = mongoose.model('User', UserSchema);
+  await User.findOneAndUpdate({
+    username: user.username,
+  }, {
+    token,
+  }).lean();
+  const updatedUser = getUserByUsername(user.username);
   return updatedUser;
 };
 
@@ -80,3 +101,5 @@ exports.getUser = getUser;
 exports.getUserByUsername = getUserByUsername;
 exports.updateUserInDB = updateUserInDB;
 exports.deleteUserFromDB = deleteUserFromDB;
+exports.getUserByToken = getUserByToken;
+exports.updateUserToken = updateUserToken;

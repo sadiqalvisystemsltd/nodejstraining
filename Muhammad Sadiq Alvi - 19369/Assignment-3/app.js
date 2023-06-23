@@ -24,7 +24,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
   if (req.url === '/update' || req.url === '/delete') {
     const token = req.body.token || req.query.token || req.headers['x-access-token'];
     if (!token) {
@@ -34,7 +34,13 @@ app.use((req, res, next) => {
     try {
       const tokenKey = process.env.TOKEN_KEY;
       jwt.verify(token, tokenKey);
-      next();
+      const user = await db.getUserByToken(token);
+      if (user && user.is_admin) {
+        next();
+      } else {
+        console.log(`Token: ${token}, Logged in user: ${user.username} and ${user.is_admin}`);
+        res.status(401).send('Invalid Token or user not allowed to perform this operation');
+      }
     } catch (err) {
       console.log('Error: ', err);
       res.status(401).send('Invalid Token');

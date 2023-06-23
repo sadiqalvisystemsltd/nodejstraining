@@ -2,7 +2,12 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { getReturnableUserObject } = require('../utils/utils');
-const { addUser, getUser, getUserByUsername } = require('../db');
+const {
+  addUser,
+  getUser,
+  getUserByUsername,
+  updateUserToken,
+} = require('../db');
 
 const authenticate = async (username, password) => {
   const user = await getUser(username, password);
@@ -14,13 +19,13 @@ const authenticate = async (username, password) => {
         expiresIn: '2h',
       },
     );
-    user.token = token;
-    return getReturnableUserObject(user);
+    const updatedUser = await updateUserToken(user, token);
+    return getReturnableUserObject(updatedUser);
   }
   return null;
 };
 
-const signup = async (username, password, email, firstName, lastName) => {
+const signup = async (username, password, email, firstName, lastName, isAdmin = false) => {
   const dbUser = await getUserByUsername(username);
   if (dbUser) {
     return 'User already exists';
@@ -28,16 +33,17 @@ const signup = async (username, password, email, firstName, lastName) => {
   const hash = await bcrypt.hash(password, 10);
   const tokenKey = process.env.TOKEN_KEY;
   console.log(`Token key: ${tokenKey}`);
-  await addUser(username, hash, email, firstName, lastName);
-  const signedUpUser = await getUserByUsername(username);
+  console.log(`Is Admin: ${isAdmin}`);
+  await addUser(username, hash, email, firstName, lastName, isAdmin);
+  const addedUser = await getUserByUsername(username);
   const token = jwt.sign(
-    { user_id: signedUpUser.id, email },
+    { user_id: addedUser.id, email },
     tokenKey,
     {
       expiresIn: '2h',
     },
   );
-  signedUpUser.token = token;
+  const signedUpUser = await updateUserToken(addedUser, token);
   return getReturnableUserObject(signedUpUser);
 };
 
