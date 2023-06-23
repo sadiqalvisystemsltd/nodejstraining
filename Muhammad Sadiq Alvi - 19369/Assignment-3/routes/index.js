@@ -1,6 +1,7 @@
 const express = require('express');
 const AUTH = require('../auth/authenticate');
 const { updateUser, deleteUser } = require('../user/user');
+const db = require('../db');
 
 const { authenticate, signup } = AUTH;
 const router = express.Router();
@@ -41,6 +42,21 @@ router.put('/update', async (req, res) => {
 
 router.delete('/delete', async (req, res) => {
   await deleteUser(req, res);
+});
+
+router.post('/create-category', async (req, res) => {
+  await db.createCategory(req.body.categoryTitle);
+  res.status(200).send('Category created!');
+});
+
+router.post('/create-product', async (req, res) => {
+  await db.createProduct(req.body.productTitle, req.body.totalInStock, req.body.categoryTitle);
+  res.status(200).send('Product created!');
+});
+
+router.post('/add-product-to-cart', async (req, res) => {
+  await db.addProductsToCart(req.body.username, req.body.productTitle, req.body.quantity);
+  res.status(200).send('Product added to cart!');
 });
 
 module.exports = router;

@@ -22,6 +22,97 @@ const UserSchema = new Schema({
   token: String,
 });
 
+const CategorySchema = new Schema({
+  title: String,
+});
+
+const ProductSchema = new Schema({
+  title: String,
+  totalInStock: Number,
+  category: { type: Schema.Types.ObjectId, ref: 'Category' },
+});
+
+const ProductOrderSchema = new Schema({
+  product: { type: Schema.Types.ObjectId, ref: 'Product' },
+  quantity: Number,
+});
+
+const CartSchema = new Schema({
+  productOrders: [{ type: Schema.Types.ObjectId, ref: 'ProductOrder' }],
+  username: String,
+});
+
+const addProductsToCart = async (username, productTitle, quantity) => {
+  const ProductOrder = mongoose.model('ProductOrder', ProductOrderSchema);
+  const Product = mongoose.model('Product', ProductSchema);
+  const product = await Product.findOne({ title: productTitle }).lean();
+  if (!product) {
+    return;
+  }
+  if (!product.totalInStock || product.totalInStock < quantity) {
+    return;
+  }
+  const remainingInStock = product.totalInStock - quantity;
+  const Cart = mongoose.model('Cart', CartSchema);
+  const newProductOrder = new ProductOrder({
+    product,
+    quantity,
+  });
+  await newProductOrder.save();
+  let cart = await Cart.findOne({ username }).lean();
+  if (cart && cart.productOrders) {
+    const { productOrders } = cart;
+    productOrders.push(newProductOrder);
+    await Cart.findOneAndUpdate({ username }, {
+      productOrders,
+    });
+  } else {
+    cart = new Cart({
+      productOrders: [newProductOrder],
+      username,
+    });
+    await cart.save();
+  }
+  await Product.findOneAndUpdate({ title: productTitle }, {
+    totalInStock: remainingInStock,
+  });
+};
+
+const createProduct = async (productTitle, totalInStock, categoryTitle) => {
+  const Product = mongoose.model('Product', ProductSchema);
+  const product = await Product.findOne({ title: productTitle }).lean();
+  if (product) {
+    return 'PRODUCT ALREADY EXISTS';
+  }
+  const Category = mongoose.model('Category', CategorySchema);
+  const category = await Category.findOne({ title: categoryTitle }).lean();
+  if (category) {
+    const newProduct = new Product({
+      title: productTitle,
+      totalInStock,
+      category,
+    });
+    await newProduct.save();
+    return newProduct;
+  }
+  return null;
+};
+
+const createCategory = async (categoryTitle) => {
+  const Category = mongoose.model('Category', CategorySchema);
+  const category = await Category.findOne({ title: categoryTitle }).lean();
+  if (category) {
+    console.log(`Category exists: ${category}`);
+    return 'CATEGORY ALREADY EXISTS';
+  }
+  const newCategory = new Category({
+    title: categoryTitle,
+  });
+  console.log(`New Category creating: ${newCategory}`);
+  await newCategory.save();
+  return null;
+};
+
 const addUser = async (username, password, email, firstName, lastName, isAdmin = false) => {
   const User = mongoose.model('User', UserSchema);
   const newUser = new User({
@@ -103,3 +194,6 @@ exports.updateUserInDB = updateUserInDB;
 exports.deleteUserFromDB = deleteUserFromDB;
 exports.getUserByToken = getUserByToken;
 exports.updateUserToken = updateUserToken;
+exports.createCategory = createCategory;
+exports.createProduct = createProduct;
+exports.addProductsToCart = addProductsToCart;
