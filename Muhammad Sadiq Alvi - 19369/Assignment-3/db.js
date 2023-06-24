@@ -1,6 +1,7 @@
 /* eslint linebreak-style: ["error", "windows"] */
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const { sendMail } = require('./utils/utils');
 
 const connectDB = async () => {
   console.log(`Connecting to database process: ${process.pid}`);
@@ -139,11 +140,11 @@ const getUser = async (username, password) => {
   return null;
 };
 
-const checkout = async (username) => {
+const checkout = async (user) => {
   const ProductOrder = mongoose.model('ProductOrder', ProductOrderSchema);
   mongoose.model('Product', ProductSchema);
   const Cart = mongoose.model('Cart', CartSchema);
-  const userCart = await Cart.findOne({ username }).populate('productOrders').exec();
+  const userCart = await Cart.findOne({ username: user.username }).populate('productOrders').exec();
   const userOrderMap = {};
   if (userCart) {
     const { productOrders } = userCart;
@@ -157,6 +158,8 @@ const checkout = async (username) => {
       }
     }));
     console.log(`User Order Map: ${JSON.stringify(userOrderMap)}`);
+    sendMail(user, userOrderMap);
+    await Cart.deleteMany({ username: user.username });
   }
 };
 

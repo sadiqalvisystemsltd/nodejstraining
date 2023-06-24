@@ -77,8 +77,7 @@ router.get('/checkout', async (req, res) => {
   const token = req.body.token || req.query.token || req.headers['x-access-token'];
   const user = await db.getUserByToken(token);
   if (user) {
-    const { username } = user;
-    await db.checkout(username);
+    await db.checkout(user);
     res.status(200).send('Checkout successful!');
   } else {
     res.status(404).send('User Not Found!');
