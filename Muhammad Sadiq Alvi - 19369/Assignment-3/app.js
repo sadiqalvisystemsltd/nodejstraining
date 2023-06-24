@@ -30,7 +30,7 @@ for (let i = 0; i < cCPUs; i += 1) {
     app.use(express.static(path.join(__dirname, 'public')));
 
     app.use(async (req, res, next) => {
-      if (req.url === '/update' || req.url === '/delete' || req.url === '/create-product' || req.url === '/create-product' || req.url === '/create-category') {
+      if (req.url === '/update' || req.url === '/delete' || req.url === '/create-update-product' || req.url === '/create-category') {
         const token = req.body.token || req.query.token || req.headers['x-access-token'];
         if (!token) {
           res.status(403).send('A token is required for authentication');
