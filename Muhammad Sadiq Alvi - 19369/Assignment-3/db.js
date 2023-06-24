@@ -47,10 +47,10 @@ const addProductsToCart = async (username, productTitle, quantity) => {
   const Product = mongoose.model('Product', ProductSchema);
   const product = await Product.findOne({ title: productTitle }).lean();
   if (!product) {
-    return;
+    return 'PRODUCT DOES NOT EXIST';
   }
   if (!product.totalInStock || product.totalInStock < quantity) {
-    return;
+    return 'PRODUCT UNAVAILABLE';
   }
   const remainingInStock = product.totalInStock - quantity;
   const Cart = mongoose.model('Cart', CartSchema);
@@ -77,6 +77,7 @@ const addProductsToCart = async (username, productTitle, quantity) => {
   await Product.findOneAndUpdate({ title: productTitle }, {
     totalInStock: remainingInStock,
   });
+  return null;
 };
 
 const createProduct = async (productTitle, totalInStock, categoryTitle) => {
