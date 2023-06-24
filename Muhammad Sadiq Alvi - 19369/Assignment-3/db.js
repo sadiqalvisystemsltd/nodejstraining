@@ -3,9 +3,9 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const connectDB = async () => {
-  console.log('Connecting to database');
+  console.log(`Connecting to database process: ${process.pid}`);
   await mongoose.connect(process.env.MONGO_DB_URI).then((res) => {
-    console.log(`DB Connected to: ${process.env.MONGO_DB_URI}`, res);
+    console.log(`DB Connected to: ${process.env.MONGO_DB_URI}, process: ${process.pid}`, res);
   }).catch((err) => {
     console.log('Unable to connect to Database: ', err);
   });
@@ -66,6 +66,7 @@ const addProductsToCart = async (username, productTitle, quantity) => {
     await Cart.findOneAndUpdate({ username }, {
       productOrders,
     });
+    console.log('Updating Product Orders');
   } else {
     cart = new Cart({
       productOrders: [newProductOrder],
@@ -82,7 +83,10 @@ const createProduct = async (productTitle, totalInStock, categoryTitle) => {
   const Product = mongoose.model('Product', ProductSchema);
   const product = await Product.findOne({ title: productTitle }).lean();
   if (product) {
-    return 'PRODUCT ALREADY EXISTS';
+    await Product.findOneAndUpdate({ title: productTitle }, {
+      totalInStock,
+    });
+    return;
   }
   const Category = mongoose.model('Category', CategorySchema);
   const category = await Category.findOne({ title: categoryTitle }).lean();
@@ -93,9 +97,7 @@ const createProduct = async (productTitle, totalInStock, categoryTitle) => {
       category,
     });
     await newProduct.save();
-    return newProduct;
   }
-  return null;
 };
 
 const createCategory = async (categoryTitle) => {
@@ -134,6 +136,27 @@ const getUser = async (username, password) => {
     return user;
   }
   return null;
+};
+
+const checkout = async (username) => {
+  const ProductOrder = mongoose.model('ProductOrder', ProductOrderSchema);
+  mongoose.model('Product', ProductSchema);
+  const Cart = mongoose.model('Cart', CartSchema);
+  const userCart = await Cart.findOne({ username }).populate('productOrders').exec();
+  const userOrderMap = {};
+  if (userCart) {
+    const { productOrders } = userCart;
+    console.log(`Product Orders: ${productOrders}`);
+    await Promise.all(productOrders.map(async (productOrder) => {
+      const poWithProduct = await ProductOrder.findOne({ _id: productOrder.id }).populate('product').exec();
+      if (poWithProduct.product.title in userOrderMap) {
+        userOrderMap[`${poWithProduct.product.title}`] += poWithProduct.quantity;
+      } else {
+        userOrderMap[`${poWithProduct.product.title}`] = poWithProduct.quantity;
+      }
+    }));
+    console.log(`User Order Map: ${JSON.stringify(userOrderMap)}`);
+  }
 };
 
 const getUserByUsername = async (username) => {
@@ -197,3 +220,4 @@ exports.updateUserToken = updateUserToken;
 exports.createCategory = createCategory;
 exports.createProduct = createProduct;
 exports.addProductsToCart = addProductsToCart;
+exports.checkout = checkout;

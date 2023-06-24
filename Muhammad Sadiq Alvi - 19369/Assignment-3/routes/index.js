@@ -55,8 +55,20 @@ router.post('/create-product', async (req, res) => {
 });
 
 router.post('/add-product-to-cart', async (req, res) => {
-  await db.addProductsToCart(req.body.username, req.body.productTitle, req.body.quantity);
+  const token = req.body.token || req.query.token || req.headers['x-access-token'];
+  const user = await db.getUserByToken(token);
+  await db.addProductsToCart(user.username, req.body.productTitle, req.body.quantity);
   res.status(200).send('Product added to cart!');
+});
+
+router.get('/checkout', async (req, res) => {
+  const token = req.body.token || req.query.token || req.headers['x-access-token'];
+  const user = await db.getUserByToken(token);
+  if (user) {
+    const { username } = user;
+    await db.checkout(username);
+  }
+  res.status(200).send('Checkout successful!');
 });
 
 module.exports = router;
