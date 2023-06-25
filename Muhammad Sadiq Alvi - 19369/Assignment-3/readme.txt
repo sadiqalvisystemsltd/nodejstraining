@@ -42,7 +42,7 @@ APIs list:
   Headers:
   {"x-access-token": "Loggedin User Token"}
 
-- (GET) http://localhost:3000/checkout (For adding products to cart)
+- (GET) http://localhost:3000/checkout (For checking out and sending email to the logged in user)
   Headers:
   {"x-access-token": "Loggedin User Token"}
 
