@@ -45,5 +45,7 @@
       "git add"
     ]
   },
-  "pre-commit": ["lint"]
+  "pre-commit": [
+    "lint"
+  ]
 }
