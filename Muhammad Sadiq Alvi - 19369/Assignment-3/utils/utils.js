@@ -1,5 +1,5 @@
 /* eslint linebreak-style: ["error", "windows"] */
-const nodemailer =    require('nodemailer');
+const nodemailer = require('nodemailer');
 
 const getReturnableUserObject = (user) => {
   const userCopy = { ...user };
