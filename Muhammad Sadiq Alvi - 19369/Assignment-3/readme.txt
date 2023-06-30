@@ -57,3 +57,6 @@ password: "hello"
 Test Normal User Account:
 username: "msalvi"
 password: "hello"
+
+
+NOTE: TO TEST PRE-COMMIT, WE HAVE TO COMMIT FROM THE ROOT i.e here at https://github.com/sadiqalvisystemsltd/nodejstraining, the pre-commit script is defined in the very base package.json i.e. (https://github.com/sadiqalvisystemsltd/nodejstraining/blob/master/package.json). 
