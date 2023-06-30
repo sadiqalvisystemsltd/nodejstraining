@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "pre-commit": "^1.2.2"
-  }
+  },
+  "scripts": {
+    "lint": "eslint ."
+  },
 }
