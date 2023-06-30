@@ -1,11 +1,12 @@
 {
   "dependencies": {
+    "eslint": "^8.43.0",
     "pre-commit": "^1.2.2"
   },
   "scripts": {
-    "lint": "eslint ."
+    "lint": "eslint \"./Muhammad Sadiq Alvi - 19369/Assignment-3/\""
   },
   "pre-commit": [
     "lint"
-  ],
+  ]
 }
