@@ -6,6 +6,7 @@
 
 const debug = require('debug')('assignment-3:server');
 const http = require('http');
+const cluster = require('cluster');
 const app = require('../app');
 
 /**
@@ -35,17 +36,7 @@ function normalizePort(val) {
 const port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
-/**
- * Create HTTP server.
- */
-
-const server = http.createServer(app);
-
-/**
- * Listen on provided port, on all network interfaces.
- */
-
-server.listen(port);
+let server = null;
 
 /**
  * Event listener for HTTP server "error" event.
@@ -86,5 +77,14 @@ function onListening() {
     : `port ${addr.port}`;
   debug(`Listening on ${bind}`);
 }
-server.on('error', onError);
-server.on('listening', onListening);
+
+/**
+ * Create HTTP server.
+ */
+
+if (!cluster.isWorker) {
+  server = http.createServer(app);
+  server.listen(port);
+  server.on('error', onError);
+  server.on('listening', onListening);
+}
